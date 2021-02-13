@@ -1,12 +1,4 @@
-/*
- ============================================================================
- Name        : ejercicio.c
- Author      : Juan José Hoyos
- Version     :
- Copyright   : Your copyright notice
- Description : Passing messages between two cores
- ============================================================================
- */
+
 #include <stdio.h>
 #include <string.h>
 #include "mpi.h"
