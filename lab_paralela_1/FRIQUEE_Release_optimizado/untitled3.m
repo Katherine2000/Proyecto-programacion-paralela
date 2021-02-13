@@ -1,0 +1,9 @@
+function [x_sigma, x_gam] = gaussian_para_esti(x)
+% x = x(:);
+gam = 0.2:0.001:10;
+x_mu = mean(x);
+toto = x - x_mu;
+x_sigma = sqrt(mean((toto).^2));
+rho_x = x_sigma/mean(abs(toto))^2;
+[x_diff, x_ind] = min(abs(rho_x - (gamma(1./gam).*gamma(3./gam))./((gamma(2./gam)).^2)));
+x_gam = gam(x_ind);  

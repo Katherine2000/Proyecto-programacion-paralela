@@ -1,0 +1,241 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome file</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h1 id="laboratory-report-2">Laboratory report 2</h1>
+<h3 id="katherine-camacho-calderón---juan-josé-hoyos-urcué">Katherine Camacho Calderón - Juan José Hoyos Urcué</h3>
+<p>This laboratory was about  parallelizing a linear search algorithm over a range of natural numbers where (with the MPI tool) it was possible to use all the available cores, distribute data among all the cores in a balanced way so that the linear search can be done faster than sequentially</p>
+<h1 id="sequential-solution">Sequential solution</h1>
+<p>Below we show the sequential implementation of the algorithm, also reporting the time it takes to later make comparisons with the parallel algorithm</p>
+<pre class=" language-c"><code class="prism  language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;string.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;math.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;time.h&gt;</span></span>
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+	clock_t begin <span class="token operator">=</span> <span class="token function">clock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">long</span> <span class="token keyword">long</span> <span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+
+	<span class="token keyword">for</span><span class="token punctuation">(</span>i<span class="token punctuation">;</span>i<span class="token operator">&lt;</span><span class="token number">20000000000</span><span class="token punctuation">;</span>i<span class="token operator">++</span><span class="token punctuation">)</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>i<span class="token operator">==</span><span class="token number">1800000000</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+			clock_t end <span class="token operator">=</span> <span class="token function">clock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">double</span> time_spent <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">double</span><span class="token punctuation">)</span><span class="token punctuation">(</span>end <span class="token operator">-</span> begin<span class="token punctuation">)</span> <span class="token operator">/</span> CLOCKS_PER_SEC<span class="token punctuation">;</span>
+			<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"El tiempo secuencial fue: %f segundos\n"</span><span class="token punctuation">,</span>time_spent<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">break</span><span class="token punctuation">;</span>
+		<span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>The time required by the sequential algorithm to perform the linear search was:  <strong>4.369315 seconds</strong></p>
+<h1 id="paralell-solutions">Paralell solutions</h1>
+<p>Below, a series of parallel algorithms that were implemented to solve this problem will be shown, all of them were executed with <strong>two cores</strong></p>
+<h1 id="broadcast-solution">Broadcast solution</h1>
+<p>Below is the  parallel solution to this problem  using a collective MPI operation, which is called Broadcast, this operation allows us to distribute  data from a processor to all the others that are part of the same communicator, so the idea was to use this operation so that when one core finds the answer it can communicate to all the others by sending a flag and then the rest of the cores can stop the search.</p>
+<pre class=" language-c"><code class="prism  language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;mpi.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;string.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;math.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h&gt;</span></span>
+
+<span class="token keyword">typedef</span> <span class="token keyword">long</span> <span class="token keyword">long</span> <span class="token keyword">int</span> ll<span class="token punctuation">;</span>
+<span class="token keyword">int</span> flag <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+
+<span class="token keyword">int</span> <span class="token function">f</span><span class="token punctuation">(</span>ll x<span class="token punctuation">)</span><span class="token punctuation">{</span>
+	<span class="token keyword">if</span><span class="token punctuation">(</span>x<span class="token operator">==</span><span class="token number">1500000</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+		<span class="token keyword">return</span> <span class="token number">10</span><span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+
+	<span class="token keyword">else</span><span class="token punctuation">{</span>
+		<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+	<span class="token keyword">int</span> rank<span class="token punctuation">,</span>size<span class="token punctuation">;</span>
+	<span class="token keyword">double</span> t1<span class="token punctuation">,</span>t2<span class="token punctuation">,</span>tf<span class="token punctuation">;</span>
+	<span class="token keyword">int</span> flag <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+	<span class="token function">MPI_Init</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>argc<span class="token punctuation">,</span> <span class="token operator">&amp;</span>argv<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token function">MPI_Barrier</span> <span class="token punctuation">(</span>MPI_COMM_WORLD<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	t1 <span class="token operator">=</span> <span class="token function">MPI_Wtime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token function">MPI_Comm_rank</span><span class="token punctuation">(</span>MPI_COMM_WORLD<span class="token punctuation">,</span> <span class="token operator">&amp;</span>rank<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">MPI_Comm_size</span><span class="token punctuation">(</span>MPI_COMM_WORLD<span class="token punctuation">,</span><span class="token operator">&amp;</span>size<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	ll y <span class="token operator">=</span>  <span class="token number">2000000</span><span class="token punctuation">;</span>
+	ll k<span class="token punctuation">;</span>
+
+
+	<span class="token keyword">for</span><span class="token punctuation">(</span>k <span class="token operator">=</span> rank<span class="token punctuation">;</span>k<span class="token operator">&lt;</span>y<span class="token punctuation">;</span>k<span class="token operator">+</span><span class="token operator">=</span>size<span class="token punctuation">)</span><span class="token punctuation">{</span>
+		<span class="token function">MPI_Bcast</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>flag<span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">,</span>MPI_INT<span class="token punctuation">,</span>rank<span class="token punctuation">,</span>MPI_COMM_WORLD<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>flag<span class="token punctuation">)</span><span class="token punctuation">{</span>
+			<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"entrando al break \n"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">break</span><span class="token punctuation">;</span>
+		<span class="token punctuation">}</span>
+		<span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">f</span><span class="token punctuation">(</span>k<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+			<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"El elemento lo encontró el procesador %d en la iteración %lld \n"</span><span class="token punctuation">,</span>rank<span class="token punctuation">,</span>k<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			flag <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+
+		<span class="token punctuation">}</span>
+	<span class="token punctuation">}</span>
+    <span class="token function">MPI_Barrier</span> <span class="token punctuation">(</span>MPI_COMM_WORLD<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	t2 <span class="token operator">=</span> <span class="token function">MPI_Wtime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	tf <span class="token operator">=</span> t2<span class="token operator">-</span>t1<span class="token punctuation">;</span>
+
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>rank<span class="token operator">==</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+		<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"El tiempo que se demoro fue:  %f \n"</span><span class="token punctuation">,</span>tf<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+
+	<span class="token function">MPI_Finalize</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre>
+<p>Although this implementation works as we want, the algorithm is very inefficient, therefore, the execution does not return any value, this occurs because this operation(broadcast) is inside a for loop,so in the worst case it will be done n times, for this reason the program execution does not end when very large values are used, so this strategy should be ruled out</p>
+<h1 id="mpi-files-solution">MPI Files solution</h1>
+<p>Below is the parallel solution to  the linear search algorithm using text files, this idea arises with the intention that all cores have access to a common file , where 1 or 0 is saved, where 1 indicates that some core has already found the answer, and therefore the other cores use this information to stop doing calculations, and 0 (which is given by default) to indicate that so far no kernel has found the answer</p>
+<pre class=" language-c"><code class="prism  language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;mpi.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;string.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;math.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h&gt;</span></span>
+<span class="token keyword">typedef</span> <span class="token keyword">long</span> <span class="token keyword">long</span> <span class="token keyword">int</span> ll<span class="token punctuation">;</span>
+
+
+
+<span class="token keyword">int</span> <span class="token function">f</span><span class="token punctuation">(</span>ll x<span class="token punctuation">)</span><span class="token punctuation">{</span>
+	<span class="token keyword">if</span><span class="token punctuation">(</span>x<span class="token operator">==</span><span class="token number">1500000</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+		<span class="token keyword">return</span> <span class="token number">10</span><span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+
+	<span class="token keyword">else</span><span class="token punctuation">{</span>
+		<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+	<span class="token keyword">int</span> rank<span class="token punctuation">,</span>size<span class="token punctuation">;</span>
+	<span class="token keyword">double</span> t1<span class="token punctuation">,</span>t2<span class="token punctuation">,</span>tf<span class="token punctuation">;</span>
+
+	<span class="token function">MPI_Init</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>argc<span class="token punctuation">,</span> <span class="token operator">&amp;</span>argv<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token function">MPI_Barrier</span> <span class="token punctuation">(</span>MPI_COMM_WORLD<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	t1 <span class="token operator">=</span> <span class="token function">MPI_Wtime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token function">MPI_Comm_rank</span><span class="token punctuation">(</span>MPI_COMM_WORLD<span class="token punctuation">,</span> <span class="token operator">&amp;</span>rank<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">MPI_Comm_size</span><span class="token punctuation">(</span>MPI_COMM_WORLD<span class="token punctuation">,</span><span class="token operator">&amp;</span>size<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+
+	ll y <span class="token operator">=</span> <span class="token number">2000000</span><span class="token punctuation">;</span>
+	ll k<span class="token punctuation">;</span>
+
+	
+	MPI_File fh<span class="token punctuation">;</span>
+	MPI_Status status<span class="token punctuation">;</span>
+
+	<span class="token keyword">for</span><span class="token punctuation">(</span>k <span class="token operator">=</span> rank<span class="token punctuation">;</span>k<span class="token operator">&lt;</span>y<span class="token punctuation">;</span>k<span class="token operator">+</span><span class="token operator">=</span>size<span class="token punctuation">)</span><span class="token punctuation">{</span>
+        <span class="token comment">//Read process{</span>
+		<span class="token function">MPI_File_open</span><span class="token punctuation">(</span>MPI_COMM_SELF<span class="token punctuation">,</span> <span class="token string">"test.txt"</span><span class="token punctuation">,</span>MPI_MODE_RDONLY<span class="token punctuation">,</span>MPI_INFO_NULL<span class="token punctuation">,</span><span class="token operator">&amp;</span>fh<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">char</span> buf<span class="token punctuation">[</span><span class="token number">5</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+		<span class="token function">MPI_File_read</span><span class="token punctuation">(</span>fh<span class="token punctuation">,</span>buf<span class="token punctuation">,</span><span class="token number">5</span><span class="token punctuation">,</span>MPI_CHAR<span class="token punctuation">,</span><span class="token operator">&amp;</span>status<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">int</span> i <span class="token operator">=</span> <span class="token function">atoi</span><span class="token punctuation">(</span>buf<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token comment">//Read process}</span>
+
+		<span class="token keyword">if</span><span class="token punctuation">(</span>i<span class="token operator">==</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+			<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"entrando al break, soy el procesador %d \n"</span><span class="token punctuation">,</span>rank<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">break</span><span class="token punctuation">;</span>
+		<span class="token punctuation">}</span>
+
+		<span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">f</span><span class="token punctuation">(</span>k<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+			<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"El elemento lo encontró el procesador %d en la iteración %lld \n"</span><span class="token punctuation">,</span>rank<span class="token punctuation">,</span>k<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token comment">//escribo 1 en el archivo (simulando un flag global)</span>
+			<span class="token comment">//write process{</span>
+			<span class="token function">MPI_File_open</span><span class="token punctuation">(</span>MPI_COMM_SELF<span class="token punctuation">,</span> <span class="token string">"test.txt"</span><span class="token punctuation">,</span>MPI_MODE_CREATE <span class="token operator">|</span> MPI_MODE_WRONLY<span class="token punctuation">,</span>MPI_INFO_NULL<span class="token punctuation">,</span><span class="token operator">&amp;</span>fh<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">char</span> buf<span class="token punctuation">[</span><span class="token number">5</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+			<span class="token function">snprintf</span><span class="token punctuation">(</span>buf<span class="token punctuation">,</span><span class="token number">5</span><span class="token punctuation">,</span><span class="token string">"%d \n"</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	        <span class="token function">MPI_File_write</span><span class="token punctuation">(</span>fh<span class="token punctuation">,</span>buf<span class="token punctuation">,</span><span class="token function">strlen</span><span class="token punctuation">(</span>buf<span class="token punctuation">)</span><span class="token punctuation">,</span> MPI_CHAR<span class="token punctuation">,</span><span class="token operator">&amp;</span>status<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+			<span class="token function">MPI_File_close</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>fh<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token comment">//write process}</span>
+
+		<span class="token punctuation">}</span>
+
+	<span class="token punctuation">}</span>
+
+	<span class="token function">MPI_Barrier</span> <span class="token punctuation">(</span>MPI_COMM_WORLD<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	t2 <span class="token operator">=</span> <span class="token function">MPI_Wtime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	tf <span class="token operator">=</span> t2<span class="token operator">-</span>t1<span class="token punctuation">;</span>
+
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>rank<span class="token operator">==</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+		<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"El tiempo que se demoro fue:  %f \n"</span><span class="token punctuation">,</span>tf<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+
+	<span class="token function">MPI_Finalize</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token punctuation">}</span>
+</code></pre>
+<p>We did not take the execution time of this algorithm because it is too inefficient and it dies in the execution, this happens because of the constant reading of text files that it does, being inside a for cycle, n readings are made in the worst case which is why the program dies and then this solution should be ruled out</p>
+<h1 id="final-and-optimal-solution">Final and optimal solution</h1>
+<p>Finally, we achieved a very simple parallel solution that allows us to perform the linear search  in such way that after someone finds the solution, execution is completely broken by a return, and  after this we do not perform any other operation, so this solution is completely valid and  actually it is very fast</p>
+<pre class=" language-c"><code class="prism  language-c"><span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;mpi.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdio.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;string.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;math.h&gt;</span></span>
+<span class="token macro property">#<span class="token directive keyword">include</span> <span class="token string">&lt;stdlib.h&gt;</span></span>
+
+<span class="token keyword">typedef</span> <span class="token keyword">long</span> <span class="token keyword">long</span> <span class="token keyword">int</span> ll<span class="token punctuation">;</span>
+<span class="token keyword">int</span> flag <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">;</span>
+
+<span class="token keyword">int</span> <span class="token function">f</span><span class="token punctuation">(</span>ll x<span class="token punctuation">)</span><span class="token punctuation">{</span>
+	<span class="token keyword">if</span><span class="token punctuation">(</span>x<span class="token operator">==</span><span class="token number">1800000000</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+		<span class="token keyword">return</span> <span class="token number">10</span><span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+
+	<span class="token keyword">else</span><span class="token punctuation">{</span>
+		<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+	<span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">int</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token keyword">int</span> argc<span class="token punctuation">,</span> <span class="token keyword">char</span> <span class="token operator">*</span>argv<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+	<span class="token keyword">int</span> rank<span class="token punctuation">,</span>size<span class="token punctuation">;</span>
+	<span class="token keyword">double</span> t1<span class="token punctuation">,</span>t2<span class="token punctuation">,</span>tf<span class="token punctuation">;</span>
+	<span class="token function">MPI_Init</span><span class="token punctuation">(</span><span class="token operator">&amp;</span>argc<span class="token punctuation">,</span> <span class="token operator">&amp;</span>argv<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token function">MPI_Barrier</span> <span class="token punctuation">(</span>MPI_COMM_WORLD<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	t1 <span class="token operator">=</span> <span class="token function">MPI_Wtime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token function">MPI_Comm_rank</span><span class="token punctuation">(</span>MPI_COMM_WORLD<span class="token punctuation">,</span> <span class="token operator">&amp;</span>rank<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token function">MPI_Comm_size</span><span class="token punctuation">(</span>MPI_COMM_WORLD<span class="token punctuation">,</span><span class="token operator">&amp;</span>size<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	ll y <span class="token operator">=</span>  <span class="token number">20000000000</span><span class="token punctuation">;</span>
+	ll k<span class="token punctuation">;</span>
+
+
+	<span class="token keyword">for</span><span class="token punctuation">(</span>k <span class="token operator">=</span> rank<span class="token punctuation">;</span>k<span class="token operator">&lt;</span>y<span class="token punctuation">;</span>k<span class="token operator">+</span><span class="token operator">=</span>size<span class="token punctuation">)</span><span class="token punctuation">{</span>
+		<span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">f</span><span class="token punctuation">(</span>k<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+			<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"El elemento lo encontró el procesador %d en la iteración %lld \n"</span><span class="token punctuation">,</span>rank<span class="token punctuation">,</span>k<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			t2 <span class="token operator">=</span> <span class="token function">MPI_Wtime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			tf <span class="token operator">=</span> t2<span class="token operator">-</span>t1<span class="token punctuation">;</span>
+			<span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"El tiempo que se demoro fue:  %f \n"</span><span class="token punctuation">,</span>tf<span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">return</span> <span class="token number">0</span><span class="token punctuation">;</span>
+
+		<span class="token punctuation">}</span>
+	<span class="token punctuation">}</span>
+
+	<span class="token function">MPI_Finalize</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+</code></pre>
+<p>The time required by the paralell algorithm to perform the linear search was:  <strong>2.745329 seconds</strong></p>
+<h1 id="speedup">Speedup</h1>
+<p>Speedup = sequential execution time/paralell execution time</p>
+<p>Speedup = 4.369315 seconds / 2.745329 seconds</p>
+<p><strong>Speedup = 1.5915451299279615</strong></p>
+<h1 id="results">Results</h1>
+<p>At the end of this laboratory, we conclude that within parallel programming it is important to think of a good design to solve a problem, it is not enough to find a way that allows solving the problem, it is necessary to find the best way since this way you can find the Desired solution to the problem that is established, for this reason during the development of the laboratory several algorithms were performed in order to find the one with the best performance, in order to have a solution when using parameters that have very large values.</p>
+</div>
+</body>
+
+</html>
