@@ -1,12 +1,4 @@
-/*
- ============================================================================
- Name        : calc_pi.c
- Author      : Juan José Hoyos
- Version     :
- Copyright   : 
- Description : Calculate Pi using numerical integration and MPI
- ============================================================================
- */
+
 #include <mpi.h>
 #include <stdio.h>
 #include <string.h>
